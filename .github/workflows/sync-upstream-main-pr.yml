@@ -92,8 +92,13 @@ jobs:
           - Keep fork `main` aligned so desktop overlay updates remain low-risk
           EOF
 
-          gh pr create \
-            --base main \
-            --head "${{ steps.branch.outputs.name }}" \
-            --title "chore: sync upstream main ($(date -u +%Y-%m-%d))" \
-            --body-file pr-body.md
+          BODY_CONTENT="$(cat pr-body.md)"
+
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${{ github.repository }}/pulls" \
+            -f title="chore: sync upstream main ($(date -u +%Y-%m-%d))" \
+            -f head="${{ steps.branch.outputs.name }}" \
+            -f base="main" \
+            -f body="$BODY_CONTENT"
