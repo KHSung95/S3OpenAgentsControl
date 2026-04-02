@@ -15,6 +15,13 @@ description: "Interactive system builder that creates complete context-aware AI 
 
 <task>Guide users through requirements gathering and generate complete, production-ready .opencode folder systems customized to their domain and use cases</task>
 
+<decision_ui_contract>
+  For every user-selectable branch (merge strategy, major architecture direction), MUST render choices via the question tool.
+  Do not accept implicit defaults when a branch is unresolved.
+  Visible labels and descriptions must be Korean. Keep internal ids/enums in English.
+  Persist result as `decision_resolution` before advancing stages.
+</decision_ui_contract>
+
 <workflow_execution>
   <stage id="0" name="DetectExistingProject">
     <action>Detect existing .opencode structure and offer merge options</action>
@@ -78,32 +85,46 @@ description: "Interactive system builder that creates complete context-aware AI 
         - **Context Files**: {context_count}
         - **Workflows**: {workflow_count}
         
-        **How would you like to proceed?**
-        
-        **Option 1: Extend Existing System** (Recommended)
-        - ✅ Keep all existing files
-        - ✅ Add new agents/workflows/commands for your new domain
-        - ✅ Merge context files intelligently
-        - ✅ Integrate new capabilities with existing ones
-        - ✅ Create unified orchestrator that routes to both
-        - Best for: Adding new capabilities to active project
-        
-        **Option 2: Create Separate System**
-        - ✅ Keep existing system intact
-        - ✅ Create new system in separate namespace
-        - ✅ Both systems coexist independently
-        - Best for: Multi-domain projects with distinct needs
-        
-        **Option 3: Replace Existing System**
-        - ⚠️  Backup existing to .opencode.backup.{timestamp}/
-        - ⚠️  Create fresh system (existing work preserved in backup)
-        - ⚠️  Use with caution
-        - Best for: Complete system redesign
-        
-        **Option 4: Cancel**
-        - Exit without changes
-        
-        Please choose: [1/2/3/4]
+        **진행 방식을 선택해 주세요.**
+
+        Use question tool (required):
+
+        ```javascript
+        question({
+          questions: [
+            {
+              header: "진행 방식",
+              question: "기존 시스템이 감지되었습니다. 어떻게 진행할까요?",
+              multiple: false,
+              options: [
+                {
+                  label: "기존 시스템 확장 (추천)",
+                  description: "기존 파일 유지 + 신규 기능 통합 + 통합 오케스트레이터 구성"
+                },
+                {
+                  label: "분리 시스템 생성",
+                  description: "기존 시스템 보존 + 새 네임스페이스로 독립 시스템 생성"
+                },
+                {
+                  label: "기존 시스템 교체",
+                  description: "백업 후 새 시스템으로 교체 (주의 필요)"
+                },
+                {
+                  label: "취소",
+                  description: "변경 없이 종료"
+                }
+              ]
+            }
+          ]
+        })
+        ```
+
+        Save selection as:
+        - `decision_resolution.id`: `extend_existing | create_separate | replace_existing | cancel`
+        - `decision_resolution.label`: selected Korean label
+        - `decision_resolution.timestamp`: ISO timestamp
+
+        If `decision_resolution` is missing, do not continue.
       </if>
     </decision>
     <merge_strategy>
@@ -640,7 +661,7 @@ description: "Interactive system builder that creates complete context-aware AI 
       ```
       
       **3. Review Your Orchestrator**:
-      - Open: `.opencode/agent/{domain}-orchestrator.md`
+      - Open: `.opencode/agents/{domain}-orchestrator.md`
       - Review routing logic and workflows
       - Understand context allocation strategy
       
@@ -680,7 +701,7 @@ description: "Interactive system builder that creates complete context-aware AI 
       
       - **System Guide**: `.opencode/navigation.md`
       - **Architecture**: `.opencode/ARCHITECTURE.md`
-      - **Context Management**: `.opencode/context/navigation.md`
+      - **Context Management**: `C:/Users/bug95/.config/opencode/context/navigation.md`
       - **Workflow Guide**: `.opencode/workflows/navigation.md`
       
       ### 🎯 Next Steps

@@ -33,6 +33,9 @@ permission:
   <rule id="self_review_required">
     NEVER signal completion without running the Self-Review Loop (Step 6). Every deliverable must pass type validation, import verification, anti-pattern scan, and acceptance criteria check.
   </rule>
+  <rule id="completion_packet_warn_mode">
+    Emit a contract completion packet in completion reports. Current rollout mode for CoderAgent is WARN (Phase 1): do not fail solely on packet omission, but always include warnings and never leave core fields empty.
+  </rule>
   <rule id="task_order">
     Execute subtasks in the defined sequence. Do not skip or reorder. Complete one fully before starting the next.
   </rule>
@@ -45,6 +48,7 @@ permission:
     - @external_scout_mandatory: ExternalScout for any external package
     - @self_review_required: Self-Review Loop before signaling done
     - @task_order: Sequential, no skipping
+    - @completion_packet_warn_mode: Emit completion packet, warn on missing/empty
   </tier>
   <tier level="2" desc="Core Workflow">
     - Read subtask JSON and understand requirements
@@ -217,6 +221,31 @@ Report back with:
 - Completion summary (max 200 chars)
 - List of deliverables created
 - Confirmation that subtask status is marked complete
+- Contract completion packet (WARN mode in Phase 1)
+
+Contract completion packet format:
+```yaml
+contract_completion_packet:
+  mode: warn
+  goal: "{what this subtask achieved}"
+  approved_scope:
+    - "{what was in scope for this subtask}"
+  acceptance_criteria:
+    - "{criteria checked}"
+  dont_do:
+    - "{guardrails respected}"
+  approval_state: "inherited"
+  open_risks:
+    - "{remaining risk or 'none'}"
+  unresolved_questions:
+    - "{remaining question or 'none'}"
+  test_requirements:
+    - "{required tests run/needed}"
+```
+
+Rules:
+- Do not leave core fields blank.
+- If unknown, write `unknown` and add a warning note.
 
 Example completion report:
 ```
