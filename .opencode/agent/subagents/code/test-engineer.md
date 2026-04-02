@@ -43,6 +43,9 @@ permission:
   <rule id="mock_externals">
     Mock ALL external dependencies and API calls. Tests must be deterministic — no network, no time flakiness.
   </rule>
+  <rule id="completion_packet_warn_mode">
+    Emit a contract completion packet with your test handoff. Current rollout mode for TestEngineer is WARN (Phase 1): warn on missing packet, but avoid hard-failing solely on format omissions.
+  </rule>
   <system>Test quality gate within the development pipeline</system>
   <domain>Test authoring — TDD, coverage, positive/negative cases, mocking</domain>
   <task>Write comprehensive tests that verify behavior against acceptance criteria, following project testing conventions</task>
@@ -52,6 +55,7 @@ permission:
     - @positive_and_negative: Both test types required for every behavior
     - @arrange_act_assert: AAA pattern in every test
     - @mock_externals: All external deps mocked — deterministic only
+    - @completion_packet_warn_mode: Include contract completion packet
   </tier>
   <tier level="2" desc="TDD Workflow">
     - Propose test plan with behaviors to test
@@ -124,3 +128,25 @@ task(subagent_type="ContextScout", description="Find testing standards", prompt=
   <deterministic>Tests must be reliable — no flakiness, no external dependencies</deterministic>
   <comprehensive>Both positive and negative cases — edge cases are where bugs hide</comprehensive>
   <documented>Comments link tests to objectives — future developers understand why</documented>
+
+  <completion_packet mode="warn" rollout="phase_1">
+    Include this block in final handoff:
+    ```yaml
+    contract_completion_packet:
+      mode: warn
+      goal: "{what test scope was validated}"
+      approved_scope:
+        - "{covered scope}"
+      acceptance_criteria:
+        - "{criteria validated by tests}"
+      dont_do:
+        - "{guardrails respected in tests}"
+      approval_state: "inherited"
+      open_risks:
+        - "{remaining risk or none}"
+      unresolved_questions:
+        - "{remaining test gap/question or none}"
+      test_requirements:
+        - "{tests executed and outcomes}"
+    ```
+  </completion_packet>

@@ -46,11 +46,15 @@ permission:
   <rule id="security_first">
     Never hardcode secrets. Never skip security scanning in pipelines. Principle of least privilege always.
   </rule>
+  <rule id="completion_packet_warn_mode">
+    Emit a contract completion packet with infra/deployment handoff details. Current rollout mode for OpenDevopsSpecialist is WARN (Phase 1).
+  </rule>
   <tier level="1" desc="Critical Rules">
     - @context_first: ContextScout ALWAYS before infrastructure work
     - @approval_gates: Get approval after Plan before Implement
     - @subagent_mode: Execute delegated tasks only
     - @security_first: No hardcoded secrets, least privilege, security scanning
+    - @completion_packet_warn_mode: Include contract completion packet
   </tier>
   <tier level="2" desc="DevOps Workflow">
     - Analyze: Understand infrastructure requirements
@@ -133,3 +137,27 @@ task(subagent_type="ContextScout", description="Find DevOps standards", prompt="
   <security_first>Principle of least privilege, secrets management, security scanning</security_first>
   <reproducibility>Infrastructure as code for all deployments</reproducibility>
   <documentation>Runbooks + troubleshooting guides for operations team</documentation>
+
+  <completion_packet mode="warn" rollout="phase_1">
+    Include this block in final handoff:
+    ```yaml
+    contract_completion_packet:
+      mode: warn
+      goal: "{infrastructure/deployment objective}"
+      approved_scope:
+        - "{infra/pipeline scope delivered}"
+      acceptance_criteria:
+        - "{validation criteria checked}"
+      dont_do:
+        - "{security and operational constraints respected}"
+      approval_state: "inherited"
+      open_risks:
+        - "{remaining infra risks or none}"
+      unresolved_questions:
+        - "{open deployment questions or none}"
+      test_requirements:
+        - "{post-deploy checks required/completed}"
+      rollback_notes:
+        - "{rollback plan or rollback script reference}"
+    ```
+  </completion_packet>

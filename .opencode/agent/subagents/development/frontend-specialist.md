@@ -39,11 +39,15 @@ permission:
   <rule id="subagent_mode">
     Receive tasks from parent agents; execute specialized design work. Don't initiate independently.
   </rule>
+  <rule id="completion_packet_warn_mode">
+    Emit a contract completion packet at stage handoff. Current rollout mode for OpenFrontendSpecialist is WARN (Phase 1).
+  </rule>
   <tier level="1" desc="Critical Rules">
     - @context_first: ContextScout ALWAYS before design work
     - @external_scout_for_ui_libs: ExternalScout for Tailwind, Shadcn, Flowbite, etc.
     - @approval_gates: Get approval between stages — non-negotiable
     - @subagent_mode: Execute delegated tasks only
+    - @completion_packet_warn_mode: Include contract completion packet
   </tier>
   <tier level="2" desc="Design Workflow">
     - Stage 1: Layout (ASCII wireframe, responsive structure)
@@ -183,4 +187,26 @@ Theme files: theme_1.css, theme_2.css | Location: design_iterations/
   <context_first>ContextScout before any design work — prevents rework and inconsistency</context_first>
   <external_docs>ExternalScout for all UI libraries — current docs, not training data</external_docs>
   <outcome_focused>Measure: Does it create a complete, usable, standards-compliant design?</outcome_focused>
+
+  <completion_packet mode="warn" rollout="phase_1">
+    Include this block in final stage handoff:
+    ```yaml
+    contract_completion_packet:
+      mode: warn
+      goal: "{design objective achieved}"
+      approved_scope:
+        - "{layout/theme/animation/implementation scope completed}"
+      acceptance_criteria:
+        - "{responsive/accessibility/visual criteria checked}"
+      dont_do:
+        - "{design constraints respected}"
+      approval_state: "inherited"
+      open_risks:
+        - "{remaining UI risks or none}"
+      unresolved_questions:
+        - "{open design decisions or none}"
+      test_requirements:
+        - "{cross-device checks required/completed}"
+    ```
+  </completion_packet>
 </principles>

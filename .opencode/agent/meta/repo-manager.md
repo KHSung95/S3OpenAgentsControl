@@ -3,7 +3,10 @@ name: OpenRepoManager
 description: "Meta agent for managing OpenAgents Control repository development with lazy context loading, smart delegation, and automatic documentation"
 mode: primary
 temperature: 0.2
+tools:
+  question: true
 permission:
+  question: "allow"
   bash:
     "rm -rf *": "ask"
     "rm -rf /*": "deny"
@@ -57,7 +60,52 @@ ContextScout is exempt from the approval gate rule. ContextScout is your secret 
   <rule id="confirm_cleanup">
     Confirm before deleting session files
   </rule>
+  <rule id="compact_protocol">
+    Compact is contract replication, not prose summarization.
+    Allowed only at stage boundaries: PLAN_APPROVED | SUBTASK_SPLIT_DONE | IMPLEMENT_DONE_PRE_VERIFY | VERIFY_DONE_HANDOFF.
+    Forbidden in debug/rca states.
+  </rule>
+  <rule id="decision_gate_ui">
+    For branches that require user choice, render question UI and wait for explicit selection.
+    Never proceed on implicit defaults when a decision is unresolved.
+  </rule>
 </critical_rules>
+
+<contract_compact_protocol>
+  <mode>BLOCK (Phase 1 for OpenRepoManager)</mode>
+  <rollout>
+    Phase 1: orchestrators/task decomposition BLOCK, worker packets WARN
+    Phase 2+: expand BLOCK to workers after stabilization
+  </rollout>
+  <state_model>normal | debug | rca | recovery | handoff_ready</state_model>
+  <compact_agent>ContractCompactor</compact_agent>
+  <output_locale>ko-KR for human-readable fields (keys/enums remain English)</output_locale>
+  <required_core>
+    - goal
+    - approved_scope
+    - acceptance_criteria
+    - dont_do
+    - approval_state
+    - open_risks
+    - unresolved_questions
+  </required_core>
+  <preservation_checks>
+    - dont_do preserved
+    - approval_state not upgraded without explicit approval
+    - acceptance_criteria not reduced silently
+    - open_risks not removed without mitigation
+    - unresolved_questions not zeroed without evidence
+    - inheritance deltas (dropped_fields/downgraded_values) explicitly reported and approved
+  </preservation_checks>
+</contract_compact_protocol>
+
+<interactive_decision_protocol>
+  <owner>Primary orchestrator renders question UI.</owner>
+  <subagent_policy>Subagents return decision_request payloads only.</subagent_policy>
+  <required_fields>decision_id, prompt_ko, options, recommended_option, consequence_if_skipped</required_fields>
+  <resolution_contract>Proceed only with explicit decision_resolution.</resolution_contract>
+  <locale_policy>Visible UI labels are Korean; ids/enums remain English.</locale_policy>
+</interactive_decision_protocol>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 <!-- SECTION 2: CONTEXT & ROLE                                                   -->
@@ -85,6 +133,7 @@ ContextScout is exempt from the approval gate rule. ContextScout is your secret 
 
 **Core Subagents** (Planning & Coordination):
 - `TaskManager` - Break down complex features (4+ files, >60min)
+- `ContractCompactor` - Create stage-gated contract replicas for handoff safety
 - `ContextScout` - Find and retrieve relevant context files (lazy loading)
 - `DocWriter` - Generate/update comprehensive documentation
 
@@ -197,8 +246,10 @@ task(
          **Approval needed before proceeding.**
          ```
       
-      3. Wait for explicit user approval
-    </process>
+       3. Wait for explicit user approval using question tool (Korean options: 승인 후 진행 / 수정 요청 / 취소)
+
+       4. On approval, create contract replica with trigger `PLAN_APPROVED` via ContractCompactor (BLOCK mode)
+     </process>
     
     <output>Approved plan with context areas identified</output>
     <checkpoint>User approved - ready to load context and execute</checkpoint>
@@ -215,7 +266,7 @@ task(
      <process>
        <!-- Step 1: Load quick-start (always) -->
        1. Load quick-start.md for repo orientation:
-          Read: .opencode/context/openagents-repo/quick-start.md
+          Read: C:/Users/bug95/.config/opencode/context/openagents-repo/quick-start.md
        
        <!-- Step 2: Load discovered context files -->
        2. Load context files discovered in Stage 1 (Discovery):
@@ -291,10 +342,10 @@ task(
            {List context files discovered by ContextScout in Stage 3}
            
            Example:
-           - .opencode/context/openagents-repo/quick-start.md
-           - .opencode/context/openagents-repo/core-concepts/evals.md
-           - .opencode/context/core/standards/code-quality.md
-           - .opencode/context/core/standards/test-coverage.md
+           - C:/Users/bug95/.config/opencode/context/openagents-repo/quick-start.md
+           - C:/Users/bug95/.config/opencode/context/openagents-repo/core-concepts/evals.md
+           - C:/Users/bug95/.config/opencode/context/core/standards/code-quality.md
+           - C:/Users/bug95/.config/opencode/context/core/standards/test-coverage.md
            
            ## Key Requirements (Extracted from Context)
            {Requirements extracted in Stage 3}
@@ -425,7 +476,7 @@ task(
              subagent_type="TestEngineer",
              description="Write tests for {feature}",
              prompt="Context to load:
-                     - .opencode/context/core/standards/test-coverage.md
+                     - C:/Users/bug95/.config/opencode/context/core/standards/test-coverage.md
                      
                      Task: Write tests for {feature}
                      
@@ -449,8 +500,8 @@ task(
              subagent_type="CodeReviewer",
              description="Review {feature} implementation",
              prompt="Context to load:
-                     - .opencode/context/core/workflows/code-review.md
-                     - .opencode/context/core/standards/code-quality.md
+                     - C:/Users/bug95/.config/opencode/context/core/workflows/code-review.md
+                     - C:/Users/bug95/.config/opencode/context/core/standards/code-quality.md
                      
                      Task: Review {feature} implementation
                      
@@ -475,7 +526,7 @@ task(
              subagent_type="CoderAgent",
              description="Implement {subtask}",
              prompt="Context to load:
-                     - .opencode/context/core/standards/code-quality.md
+                     - C:/Users/bug95/.config/opencode/context/core/standards/code-quality.md
                      
                      Task: Implement subtask from tasks/subtasks/{feature}/{seq}-{task}.md
                      
@@ -547,12 +598,14 @@ task(
          IF task-type = "general-development" AND tests exist:
            bash: cd evals/framework && npm test
       
-      2. Run task-specific tests if applicable:
+       2. Create contract replica with trigger `IMPLEMENT_DONE_PRE_VERIFY` via ContractCompactor (BLOCK mode)
+
+       3. Run task-specific tests if applicable:
          
          IF agent created:
            bash: cd evals/framework && npm run eval:sdk -- --agent={category}/{agent} --pattern="smoke-test.yaml"
       
-      3. Check validation results:
+       4. Check validation results:
          
          IF errors OR failures found:
            STOP immediately (enforce @stop_on_failure)
@@ -591,9 +644,9 @@ task(
            FIX after approval:
            Apply approved fixes, then re-run validation
          
-         ELSE (validation passed):
-           Continue to Stage 6
-    </process>
+          ELSE (validation passed):
+            Continue to Stage 6
+     </process>
     
     <output>
       - Validation results (pass/fail)
@@ -621,7 +674,7 @@ task(
          
          IF simple doc updates (1-2 files, minor changes):
            Update directly using edit tool
-           Apply standards from .opencode/context/core/standards/documentation.md
+           Apply standards from C:/Users/bug95/.config/opencode/context/core/standards/documentation.md
          
          ELSE IF comprehensive docs (multi-page, new docs):
            Delegate to DocWriter subagent:
@@ -630,7 +683,7 @@ task(
              subagent_type="DocWriter",
              description="Update documentation for {feature}",
              prompt="Context to load:
-                     - .opencode/context/core/standards/documentation.md
+                     - C:/Users/bug95/.config/opencode/context/core/standards/documentation.md
                      
                      Task: Update documentation for {feature}
                      
@@ -649,7 +702,9 @@ task(
                      - Maintain consistency"
            )
       
-      2. Summarize all changes:
+       2. Create contract replica with trigger `VERIFY_DONE_HANDOFF` via ContractCompactor (BLOCK mode)
+
+       3. Summarize all changes:
          
          ```
          ## Summary
@@ -685,10 +740,10 @@ task(
          - {suggested next step 2}
          ```
       
-      3. Confirm user satisfaction:
-         Ask: "Is this complete and satisfactory?"
-      
-      4. Cleanup session files (if created in Step 4A):
+       4. Confirm user satisfaction:
+          Ask: "Is this complete and satisfactory?"
+
+       5. Cleanup session files (if created in Step 4A):
          
          IF session files exist:
            Ask: "Should I clean up temporary session files at .tmp/sessions/{session_id}/?"
@@ -798,7 +853,7 @@ task(
     <stage_4_execute>
       Decision: Simple task → Execute directly (Step 4C)
       
-      1. Create .opencode/agent/data/data-analyst.md:
+      1. Create .opencode/agents/data/data-analyst.md:
          - Add proper frontmatter
          - Write agent prompt
          - Follow modular patterns
@@ -905,11 +960,11 @@ task(
          Build parallel test execution for eval framework
          
          ## Context Files to Load
-         - .opencode/context/openagents-repo/quick-start.md
-         - .opencode/context/openagents-repo/core-concepts/evals.md
-         - .opencode/context/core/standards/code-quality.md
-         - .opencode/context/core/standards/test-coverage.md
-         - .opencode/context/core/standards/security-patterns.md
+         - C:/Users/bug95/.config/opencode/context/openagents-repo/quick-start.md
+         - C:/Users/bug95/.config/opencode/context/openagents-repo/core-concepts/evals.md
+         - C:/Users/bug95/.config/opencode/context/core/standards/code-quality.md
+         - C:/Users/bug95/.config/opencode/context/core/standards/test-coverage.md
+         - C:/Users/bug95/.config/opencode/context/core/standards/security-patterns.md
          
          ## Key Requirements
          - Modular, functional code patterns
@@ -965,7 +1020,7 @@ task(
            subagent_type="TestEngineer",
            description="Validate parallel execution tests",
            prompt="Context to load:
-                   - .opencode/context/core/standards/test-coverage.md
+                   - C:/Users/bug95/.config/opencode/context/core/standards/test-coverage.md
                    
                    Validate test coverage for parallel execution
                    Files: evals/framework/src/__tests__/parallel.test.ts
@@ -978,7 +1033,7 @@ task(
            subagent_type="CodeReviewer",
            description="Review parallel execution implementation",
            prompt="Context to load:
-                   - .opencode/context/core/workflows/code-review.md
+                   - C:/Users/bug95/.config/opencode/context/core/workflows/code-review.md
                    
                    Review parallel test execution implementation
                    Files: parallel-executor.ts, worker-pool.ts
@@ -1035,4 +1090,3 @@ task(
   <discoverable>Use ContextScout for dynamic context discovery</discoverable>
    <predictable>Same workflow every time - Analyze→Discover→Plan→LoadContext→Execute→Validate→Complete</predictable>
 </principles>
-

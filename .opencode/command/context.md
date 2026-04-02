@@ -25,7 +25,7 @@ dependencies:
   </rule>
   
   <rule id="lazy_load">
-    ALWAYS read required context files from .opencode/context/core/context-system/ BEFORE executing operations.
+    ALWAYS read required context files from C:/Users/bug95/.config/opencode/context/core/context-system/ BEFORE executing operations.
   </rule>
 </critical_rules>
 
@@ -100,6 +100,9 @@ When invoked without arguments: `/context`
 **`/context compact {file}`**
 - Minimize verbose file to MVI format
 - **Reads**: `guides/compact.md` + `standards/mvi.md`
+- **Important**: This is content minimization only. It does NOT produce workflow contract replicas.
+- **Locale**: Human-readable output should default to Korean; keep code/ids/enums unchanged.
+- For planner/implementer/verifier handoff packets, use `ContractCompactor` and `compact-protocol.md`.
 
 ---
 
@@ -130,7 +133,7 @@ When invoked without arguments: `/context`
 ### Migration
 
 **`/context migrate`**
-- Copy project-intelligence from global (`~/.config/opencode/context/`) to local (`.opencode/context/`)
+- Copy project-intelligence from global (`~/.config/C:/Users/bug95/.config/opencode/context/`) to local (`C:/Users/bug95/.config/opencode/context/`)
 - For users who installed globally but want project-specific, git-committed context
 - Shows diff if local files already exist, asks before overwriting
 - Optionally cleans up global project-intelligence after migration
@@ -191,7 +194,7 @@ When invoked without arguments: `/context`
   </operation>
 </lazy_load_map>
 
-**All files located in**: `.opencode/context/core/context-system/`
+**All files located in**: `C:/Users/bug95/.config/opencode/context/core/context-system/`
 
 ---
 
@@ -201,7 +204,7 @@ When invoked without arguments: `/context`
   <!-- Delegate operations to specialized subagents -->
   <route operations="harvest|extract|organize|update|error|create|migrate" to="ContextOrganizer">
     Pass: operation name, arguments, lazy load map
-    Subagent loads: Required context files from .opencode/context/core/context-system/
+    Subagent loads: Required context files from C:/Users/bug95/.config/opencode/context/core/context-system/
     Subagent executes: Multi-stage workflow per operation
   </route>
   
@@ -217,7 +220,7 @@ When invoked without arguments: `/context`
 
 ### Structure
 ```
-.opencode/context/core/context-system/
+C:/Users/bug95/.config/opencode/context/core/context-system/
 ├── operations/     # How to do things (harvest, extract, organize, update)
 ├── standards/      # What to follow (mvi, structure, templates)
 └── guides/         # Step-by-step (workflows, compact, creation)
@@ -279,7 +282,7 @@ When invoked without arguments: `/context`
 ### Migrate Global to Local
 ```bash
 /context migrate
-# Copies project-intelligence from ~/.config/opencode/context/ to .opencode/context/
+# Copies project-intelligence from ~/.config/C:/Users/bug95/.config/opencode/context/ to C:/Users/bug95/.config/opencode/context/
 # Shows what will be copied, asks for approval before proceeding
 ```
 
@@ -299,7 +302,7 @@ After any operation:
 
 ## Full Documentation
 
-**Context System Location**: `.opencode/context/core/context-system/`
+**Context System Location**: `C:/Users/bug95/.config/opencode/context/core/context-system/`
 
 **Structure**:
 - `operations/` - Detailed operation workflows

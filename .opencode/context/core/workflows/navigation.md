@@ -19,6 +19,8 @@
 | `external-libraries-faq.md` | Troubleshooting | ⭐⭐⭐ | Errors/questions |
 | `feature-breakdown.md` | Breaking down features | ⭐⭐⭐⭐ | 4+ files, complex tasks |
 | `session-management.md` | Managing sessions | ⭐⭐⭐ | Session cleanup |
+| `compact-protocol.md` | Stage-gated contract compact protocol | ⭐⭐⭐⭐ | Planner/implementer/verifier handoff |
+| `compact-contract-schema.md` | Contract replica schema | ⭐⭐⭐⭐ | Building/validating compact packets |
 | `design-iteration-overview.md` | Design workflow overview | ⭐⭐⭐⭐ | Starting design work |
 | `design-iteration-plan-file.md` | Design plan template | ⭐⭐⭐⭐ | Creating design plan |
 | `design-iteration-stage-layout.md` | Stage 1: Layout | ⭐⭐⭐ | Layout design |
@@ -51,6 +53,10 @@
 
 **For session management**:
 1. Load `session-management.md` (medium)
+
+**For contract handoff compact**:
+1. Load `compact-protocol.md` (high)
+2. Load `compact-contract-schema.md` (high)
 
 ---
 
