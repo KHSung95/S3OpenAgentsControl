@@ -141,11 +141,16 @@ jobs:
           - Verify overlay hash alignment before opening PR
           EOF
 
-          gh pr create \
-            --base desktop/main \
-            --head "${{ steps.refresh.outputs.branch }}" \
-            --title "chore: refresh desktop overlay ($(date -u +%Y-%m-%d))" \
-            --body-file pr-body.md
+          BODY_CONTENT="$(cat pr-body.md)"
+
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            "/repos/${{ github.repository }}/pulls" \
+            -f title="chore: refresh desktop overlay ($(date -u +%Y-%m-%d))" \
+            -f head="${{ steps.refresh.outputs.branch }}" \
+            -f base="desktop/main" \
+            -f body="$BODY_CONTENT"
 
       - name: Report no changes after refresh
         if: steps.plan.outputs.needed == 'true' && steps.result.outputs.needed != 'true'
