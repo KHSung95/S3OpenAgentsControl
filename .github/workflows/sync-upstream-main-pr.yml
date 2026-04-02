@@ -43,11 +43,13 @@ jobs:
         run: |
           MAIN_SHA="$(git rev-parse origin/main)"
           UPSTREAM_SHA="$(git rev-parse upstream/main)"
+          UPSTREAM_AHEAD_COUNT="$(git rev-list --count origin/main..upstream/main)"
 
           echo "main_sha=$MAIN_SHA" >> "$GITHUB_OUTPUT"
           echo "upstream_sha=$UPSTREAM_SHA" >> "$GITHUB_OUTPUT"
+          echo "upstream_ahead_count=$UPSTREAM_AHEAD_COUNT" >> "$GITHUB_OUTPUT"
 
-          if [ "$MAIN_SHA" = "$UPSTREAM_SHA" ]; then
+          if [ "$UPSTREAM_AHEAD_COUNT" = "0" ]; then
             echo "needed=false" >> "$GITHUB_OUTPUT"
             echo "reason=already-aligned" >> "$GITHUB_OUTPUT"
             exit 0
@@ -77,7 +79,8 @@ jobs:
         id: branch
         run: |
           BRANCH_NAME="bot/upstream-sync-$(date -u +%Y%m%d-%H%M%S)"
-          git checkout -B "$BRANCH_NAME" upstream/main
+          git checkout -B "$BRANCH_NAME" origin/main
+          git merge --no-edit upstream/main
           git push -u origin "$BRANCH_NAME"
           echo "name=$BRANCH_NAME" >> "$GITHUB_OUTPUT"
 
