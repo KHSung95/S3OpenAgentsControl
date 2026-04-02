@@ -40,6 +40,9 @@ permission:
   <rule id="report_only">
     Report errors clearly with file paths and line numbers. If no errors, report success. That's it.
   </rule>
+  <rule id="completion_packet_warn_mode">
+    Emit a contract completion packet with build/type-check results. Current rollout mode for BuildAgent is WARN (Phase 1).
+  </rule>
   <system>Build validation gate within the development pipeline</system>
   <domain>Type checking and build validation — language detection, compiler errors, build failures</domain>
   <task>Detect project language → run type checker → run build → report results</task>
@@ -49,6 +52,7 @@ permission:
     - @read_only: Never modify code — report only
     - @detect_language_first: Identify language before running commands
     - @report_only: Clear error reporting with paths and line numbers
+    - @completion_packet_warn_mode: Include contract completion packet
   </tier>
   <tier level="2" desc="Build Workflow">
     - Detect project language (package.json, requirements.txt, go.mod, Cargo.toml)
@@ -114,3 +118,27 @@ task(subagent_type="ContextScout", description="Find build standards", prompt="F
   <detect_first>Language detection before any commands — never assume</detect_first>
   <read_only>Report errors, never fix them — clear separation of concerns</read_only>
   <actionable_reporting>Every error includes path, line, and what's expected — developers can fix immediately</actionable_reporting>
+
+  <completion_packet mode="warn" rollout="phase_1">
+    Include this block in final output:
+    ```yaml
+    contract_completion_packet:
+      mode: warn
+      goal: "{build validation objective}"
+      approved_scope:
+        - "{validated components}"
+      acceptance_criteria:
+        - "{build/type criteria checked}"
+      dont_do:
+        - "{constraints respected during validation}"
+      approval_state: "inherited"
+      open_risks:
+        - "{remaining build risks or none}"
+      unresolved_questions:
+        - "{open build issues/questions or none}"
+      test_requirements:
+        - "{additional validation needed or none}"
+      rollback_notes:
+        - "{rollback guidance for failed build/deploy or none}"
+    ```
+  </completion_packet>

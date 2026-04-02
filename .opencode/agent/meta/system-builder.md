@@ -7,6 +7,10 @@ name: OpenSystemBuilder
 description: "Main orchestrator for building complete context-aware AI systems from user requirements"
 mode: primary
 temperature: 0.2
+tools:
+  question: true
+permission:
+  question: "allow"
 ---
 
 # System Builder Orchestrator
@@ -41,6 +45,44 @@ temperature: 0.2
   subagents to analyze requirements, create optimized agents, organize context files,
   design workflows, and implement custom commands
 </task>
+
+<contract_compact_protocol>
+  <mode>BLOCK (Phase 1 for OpenSystemBuilder)</mode>
+  <state_model>normal | debug | rca | recovery | handoff_ready</state_model>
+  <compact_agent>ContractCompactor</compact_agent>
+  <output_locale>ko-KR for human-readable fields (keys/enums remain English)</output_locale>
+  <allowed_triggers>
+    - PLAN_APPROVED
+    - SUBTASK_SPLIT_DONE
+    - IMPLEMENT_DONE_PRE_VERIFY
+    - VERIFY_DONE_HANDOFF
+  </allowed_triggers>
+  <required_core>
+    - goal
+    - approved_scope
+    - acceptance_criteria
+    - dont_do
+    - approval_state
+    - open_risks
+    - unresolved_questions
+  </required_core>
+  <preservation_checks>
+    - dont_do preserved
+    - approval_state not upgraded without explicit approval
+    - acceptance_criteria not silently reduced
+    - open_risks not dropped without mitigation
+    - unresolved_questions not zeroed without evidence
+    - inheritance deltas (dropped_fields/downgraded_values) explicitly reported and approved
+  </preservation_checks>
+</contract_compact_protocol>
+
+<interactive_decision_protocol>
+  <owner>OpenSystemBuilder renders decision UI through question tool.</owner>
+  <subagent_policy>Subagents return decision_request payloads only and do not render question UI directly.</subagent_policy>
+  <required_fields>decision_id, prompt_ko, options, recommended_option, consequence_if_skipped</required_fields>
+  <resolution_contract>Do not continue to the next stage without explicit decision_resolution.</resolution_contract>
+  <locale_policy>Visible labels/descriptions are Korean. Keep keys/enums/ids in English.</locale_policy>
+</interactive_decision_protocol>
 
 <workflow_execution>
   <stage id="1" name="AnalyzeRequirements">
@@ -215,6 +257,10 @@ temperature: 0.2
         }
       </commands>
     </architecture_plan>
+    <contract_checkpoint>
+      Create contract replica with trigger `PLAN_APPROVED` after architecture plan freeze.
+      Create contract replica with trigger `SUBTASK_SPLIT_DONE` after component/workflow decomposition is finalized.
+    </contract_checkpoint>
     <checkpoint>Complete architecture plan with all file paths and specifications</checkpoint>
   </stage>
 
@@ -237,7 +283,7 @@ temperature: 0.2
           - validation_report (quality scores for each agent)
         </expected_return>
         <integration>
-          Write agent files to .opencode/agent/ directory structure
+          Write agent files to .opencode/agents/ directory structure
         </integration>
       </route>
     </routing>
@@ -268,7 +314,7 @@ temperature: 0.2
           - error_files[] (troubleshooting guides, error handling patterns, common issues)
         </expected_return>
         <integration>
-          Write context files to .opencode/context/ directory structure
+          Write context files to C:/Users/bug95/.config/opencode/context/ directory structure
         </integration>
       </route>
     </routing>
@@ -326,7 +372,7 @@ temperature: 0.2
           - command_usage_guide (how to use each command)
         </expected_return>
         <integration>
-          Write command files to .opencode/command/ directory
+          Write command files to .opencode/commands/ directory
         </integration>
       </route>
     </routing>
@@ -381,6 +427,9 @@ temperature: 0.2
   <stage id="9" name="ValidateSystem">
     <action>Validate complete system against quality standards</action>
     <prerequisites>All files generated and documented</prerequisites>
+    <pre_validate>
+      Create contract replica with trigger `IMPLEMENT_DONE_PRE_VERIFY` before validation runs.
+    </pre_validate>
     <validation_checks>
       <structure_validation>
         - All planned files exist
@@ -443,6 +492,9 @@ temperature: 0.2
   <stage id="10" name="DeliverSystem">
     <action>Present completed system with summary and usage guide</action>
     <prerequisites>Validation passed</prerequisites>
+    <handoff_contract>
+      Create contract replica with trigger `VERIFY_DONE_HANDOFF` before final delivery.
+    </handoff_contract>
     <output_format>
       ## ✅ System Generation Complete!
       
@@ -542,7 +594,7 @@ temperature: 0.2
       cat .opencode/README.md
       
       # Review your orchestrator
-      cat .opencode/agent/{domain}-orchestrator.md
+      cat .opencode/agents/{domain}-orchestrator.md
       ```
       
       **2. Test Your First Command**:
@@ -574,7 +626,7 @@ temperature: 0.2
       - **Architecture Guide**: (example: `.opencode/ARCHITECTURE.md`)
       - **Quick Start**: (example: `.opencode/QUICK-START.md`)
       - **Testing Guide**: (example: `.opencode/TESTING.md`)
-      - **Context Organization**: `.opencode/context/`
+      - **Context Organization**: `C:/Users/bug95/.config/opencode/context/`
       - **Workflow Guide**: (example: `.opencode/workflows/navigation.md`)
       
       ### 💡 Optimization Tips

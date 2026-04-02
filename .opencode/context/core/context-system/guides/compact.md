@@ -4,6 +4,10 @@
 
 **Purpose**: Compress verbose content into minimal viable information
 
+**Boundary**: This guide is for content compaction only. It does not define workflow handoff contracts. For stage-gated handoff packets, use `../../workflows/compact-protocol.md`.
+
+**Locale**: Default to Korean for prose/bullet explanations. Keep code blocks, identifiers, file paths, and enum values in original language.
+
 **Last Updated**: 2026-02-15
 
 ---
@@ -49,6 +53,7 @@ Transform verbose explanations → core concepts following MVI principle.
 - [ ] Reference link added for deep dive?
 - [ ] File is under line limit?
 - [ ] Can be scanned in <30 seconds?
+- [ ] Human-readable text is Korean by default?
 
 ---
 
