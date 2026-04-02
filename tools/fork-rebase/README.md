@@ -13,6 +13,7 @@ This kit lets you maintain your custom OpenCode/OAC changes as an **overlay** on
 - `overlay-manifest.txt`: list of files to copy into fork's `.opencode/` (`source` or `source => target` format)
 - `apply-overlay.ps1`: copy overlay files into target fork repo
 - `verify-overlay.ps1`: hash-based verification that fork matches overlay
+- `install-opencode-config.ps1`: install overlay files directly into local OpenCode config path (default: `~/.config/opencode`)
 
 ## One-Time Fork Setup
 
@@ -51,6 +52,20 @@ Optional checks:
 powershell -ExecutionPolicy Bypass -File "C:\Users\bug95\.config\opencode\tools\fork-rebase\verify-overlay.ps1" -TargetRepo "C:\work\OpenAgentsControl-fork"
 ```
 
+## Install Directly To Local `.config/opencode`
+
+If you want immediately usable local settings (without touching fork `.opencode`), run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "C:\work\OpenAgentsControl-fork\tools\fork-rebase\install-opencode-config.ps1"
+```
+
+Optional explicit target path:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File "C:\work\OpenAgentsControl-fork\tools\fork-rebase\install-opencode-config.ps1" -TargetPath "C:\Users\<you>\.config\opencode"
+```
+
 Manifest examples:
 
 ```text
@@ -78,6 +93,15 @@ When upstream changes:
 4. Resolve any conflicts and commit
 
 This keeps your custom behavior reproducible and reviewable.
+
+## Branch Hygiene (Automation)
+
+The automation workflows now use fixed bot branches instead of timestamped names:
+
+- `bot/upstream-sync-main`
+- `bot/desktop-overlay-refresh`
+
+And `Cleanup Generated Branches` removes stale generated branches (while preserving any branch that is the head of an open PR).
 
 ## If You Previously Created Wrong Paths
 
