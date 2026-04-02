@@ -29,8 +29,10 @@ jobs:
 
       - name: Fetch origin refs
         run: |
+          REFRESH_BRANCH="bot/desktop-overlay-refresh"
           git fetch origin main
           git fetch origin desktop/main || true
+          git fetch origin "$REFRESH_BRANCH" || true
 
       - name: Ensure desktop/main exists
         id: desktop_branch
@@ -50,16 +52,34 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          EXISTING_PR="$(gh pr list --state open --base desktop/main --json number,title --jq 'map(select(.title | startswith("chore: refresh desktop overlay")))[0].number // empty')"
-          if [ -n "$EXISTING_PR" ]; then
+          REFRESH_BRANCH="bot/desktop-overlay-refresh"
+          EXISTING_PR="$(gh pr list --state open --base desktop/main --head "$REFRESH_BRANCH" --json number --jq '.[0].number // empty')"
+
+          echo "refresh_branch=$REFRESH_BRANCH" >> "$GITHUB_OUTPUT"
+          echo "existing_pr=$EXISTING_PR" >> "$GITHUB_OUTPUT"
+
+          if [ -z "$EXISTING_PR" ]; then
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+            echo "reason=create-or-update-pr" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if git show-ref --verify --quiet "refs/remotes/origin/$REFRESH_BRANCH"; then
+            MAIN_AHEAD_COUNT="$(git rev-list --count origin/$REFRESH_BRANCH..origin/main)"
+          else
+            MAIN_AHEAD_COUNT="1"
+          fi
+
+          echo "main_ahead_of_refresh_branch=$MAIN_AHEAD_COUNT" >> "$GITHUB_OUTPUT"
+
+          if [ "$MAIN_AHEAD_COUNT" = "0" ]; then
             echo "needed=false" >> "$GITHUB_OUTPUT"
-            echo "reason=open-pr" >> "$GITHUB_OUTPUT"
-            echo "existing_pr=$EXISTING_PR" >> "$GITHUB_OUTPUT"
+            echo "reason=open-pr-up-to-date" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           echo "needed=true" >> "$GITHUB_OUTPUT"
-          echo "reason=create-pr" >> "$GITHUB_OUTPUT"
+          echo "reason=refresh-open-pr" >> "$GITHUB_OUTPUT"
 
       - name: Report no-op
         if: steps.plan.outputs.needed != 'true'
@@ -73,7 +93,7 @@ jobs:
         if: steps.plan.outputs.needed == 'true'
         id: refresh
         run: |
-          BRANCH_NAME="bot/desktop-overlay-refresh-$(date -u +%Y%m%d-%H%M%S)"
+          BRANCH_NAME="${{ steps.plan.outputs.refresh_branch }}"
           BASE_SHA="$(git rev-parse origin/desktop/main)"
 
           git checkout -B "$BRANCH_NAME" origin/desktop/main
@@ -127,10 +147,10 @@ jobs:
       - name: Push refresh branch
         if: steps.plan.outputs.needed == 'true' && steps.result.outputs.needed == 'true'
         run: |
-          git push -u origin "${{ steps.refresh.outputs.branch }}"
+          git push -u origin "${{ steps.refresh.outputs.branch }}" --force-with-lease
 
       - name: Open pull request to desktop/main
-        if: steps.plan.outputs.needed == 'true' && steps.result.outputs.needed == 'true'
+        if: steps.plan.outputs.needed == 'true' && steps.result.outputs.needed == 'true' && steps.plan.outputs.existing_pr == ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -151,6 +171,11 @@ jobs:
             -f head="${{ steps.refresh.outputs.branch }}" \
             -f base="desktop/main" \
             -f body="$BODY_CONTENT"
+
+      - name: Report updated existing refresh PR
+        if: steps.plan.outputs.needed == 'true' && steps.result.outputs.needed == 'true' && steps.plan.outputs.existing_pr != ''
+        run: |
+          echo "Updated branch for existing PR #${{ steps.plan.outputs.existing_pr }}"
 
       - name: Report no changes after refresh
         if: steps.plan.outputs.needed == 'true' && steps.result.outputs.needed != 'true'
