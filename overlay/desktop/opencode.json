@@ -1,0 +1,266 @@
+{
+    "$schema":  "https://opencode.ai/config.json",
+    "agent":  {
+                  "ExternalScout":  {
+                                        "description":  "Fetches current external documentation and references",
+                                        "mode":  "subagent",
+                                        "hidden":  true,
+                                        "temperature":  0.1,
+                                        "prompt":  "{file:./agents/subagents/core/externalscout.md}"
+                                    },
+                  "OpenCopywriter":  {
+                                         "description":  "Writes persuasive copy, marketing content, and brand messaging",
+                                         "mode":  "primary",
+                                         "temperature":  0.3,
+                                         "prompt":  "{file:./agents/content/copywriter.md}"
+                                     },
+                  "Eval Runner":  {
+                                      "description":  "Evaluation framework test harness",
+                                      "mode":  "subagent",
+                                      "hidden":  true,
+                                      "temperature":  0.2,
+                                      "prompt":  "{file:./agents/eval-runner.md}"
+                                  },
+                  "DocWriter":  {
+                                    "description":  "Writes and updates technical documentation",
+                                    "mode":  "subagent",
+                                    "hidden":  true,
+                                    "temperature":  0.1,
+                                    "prompt":  "{file:./agents/subagents/core/documentation.md}"
+                                },
+                  "ContextScout":  {
+                                       "description":  "Discovers relevant context files and project standards",
+                                       "mode":  "subagent",
+                                       "hidden":  true,
+                                       "temperature":  0.1,
+                                       "prompt":  "{file:./agents/subagents/core/contextscout.md}"
+                                   },
+                   "openagent":  {
+                                     "description":  "Universal agent for answering queries and coordinating workflows",
+                                     "mode":  "primary",
+                                     "temperature":  0.2,
+                                     "tools":  {
+                                                   "question":  true
+                                               },
+                                     "permission":  {
+                                                        "question":  "allow"
+                                                    },
+                                     "prompt":  "{file:./agents/core/openagent.md}"
+                                 },
+                  "OpenDataAnalyst":  {
+                                          "description":  "Analyzes data, builds visualizations, and produces insights",
+                                          "mode":  "primary",
+                                          "temperature":  0.1,
+                                          "prompt":  "{file:./agents/data/data-analyst.md}"
+                                      },
+                  "TestEngineer":  {
+                                       "description":  "Authors comprehensive tests following TDD principles",
+                                       "mode":  "subagent",
+                                       "hidden":  true,
+                                       "temperature":  0.1,
+                                       "prompt":  "{file:./agents/subagents/code/test-engineer.md}"
+                                   },
+                  "OpenDevopsSpecialist":  {
+                                               "description":  "Handles CI/CD, infrastructure, and deployment automation",
+                                               "mode":  "subagent",
+                                               "hidden":  true,
+                                               "temperature":  0.1,
+                                               "prompt":  "{file:./agents/subagents/development/devops-specialist.md}"
+                                           },
+                   "TaskManager":  {
+                                       "description":  "Breaks down complex work into atomic, trackable subtasks",
+                                       "mode":  "subagent",
+                                       "hidden":  true,
+                                       "temperature":  0.1,
+                                       "prompt":  "{file:./agents/subagents/core/task-manager.md}"
+                                   },
+                   "ContractCompactor":  {
+                                             "description":  "Creates stage-gated contract replicas with preservation checks",
+                                             "mode":  "subagent",
+                                             "hidden":  true,
+                                             "temperature":  0,
+                                             "prompt":  "{file:./agents/subagents/core/contract-compactor.md}"
+                                         },
+                   "BatchExecutor":  {
+                                         "description":  "Coordinates parallel batches of delegated subtasks",
+                                         "mode":  "subagent",
+                                         "hidden":  true,
+                                         "temperature":  0.1,
+                                         "prompt":  "{file:./agents/subagents/core/batch-executor.md}"
+                                     },
+                   "OpenSystemBuilder":  {
+                                             "description":  "Builds complete context-aware AI systems and architectures",
+                                             "mode":  "primary",
+                                             "temperature":  0.2,
+                                             "tools":  {
+                                                           "question":  true
+                                                       },
+                                             "permission":  {
+                                                                "question":  "allow"
+                                                            },
+                                             "prompt":  "{file:./agents/meta/system-builder.md}"
+                                         },
+                  "CoderAgent":  {
+                                     "description":  "Executes focused coding subtasks with clean implementations",
+                                     "mode":  "subagent",
+                                     "hidden":  true,
+                                     "temperature":  0.1,
+                                     "prompt":  "{file:./agents/subagents/code/coder-agent.md}"
+                                 },
+                  "OpenTechnicalWriter":  {
+                                              "description":  "Creates documentation, API docs, and technical guides",
+                                              "mode":  "primary",
+                                              "temperature":  0.2,
+                                              "prompt":  "{file:./agents/content/technical-writer.md}"
+                                          },
+                  "AgentGenerator":  {
+                                         "description":  "Generates new agent definitions and templates",
+                                         "mode":  "subagent",
+                                         "hidden":  true,
+                                         "temperature":  0.1,
+                                         "prompt":  "{file:./agents/subagents/system-builder/agent-generator.md}"
+                                     },
+                   "opencoder":  {
+                                     "description":  "Orchestration agent for complex coding and multi-file refactoring",
+                                     "mode":  "primary",
+                                     "temperature":  0.1,
+                                     "tools":  {
+                                                   "question":  true
+                                               },
+                                     "permission":  {
+                                                        "question":  "allow"
+                                                    },
+                                     "prompt":  "{file:./agents/core/opencoder.md}"
+                                 },
+                  "WorkflowDesigner":  {
+                                           "description":  "Designs workflows and execution flows for systems",
+                                           "mode":  "subagent",
+                                           "hidden":  true,
+                                           "temperature":  0.1,
+                                           "prompt":  "{file:./agents/subagents/system-builder/workflow-designer.md}"
+                                       },
+                  "Context Retriever":  {
+                                            "description":  "Retrieves relevant context and source references",
+                                            "mode":  "subagent",
+                                            "hidden":  true,
+                                            "temperature":  0.1,
+                                            "prompt":  "{file:./agents/subagents/core/context-retriever.md}"
+                                        },
+                  "CodeReviewer":  {
+                                       "description":  "Reviews code for correctness, security, and quality",
+                                       "mode":  "subagent",
+                                       "hidden":  true,
+                                       "temperature":  0.1,
+                                       "prompt":  "{file:./agents/subagents/code/reviewer.md}"
+                                   },
+                  "ContextOrganizer":  {
+                                           "description":  "Organizes and structures context resources",
+                                           "mode":  "subagent",
+                                           "hidden":  true,
+                                           "temperature":  0.1,
+                                           "prompt":  "{file:./agents/subagents/system-builder/context-organizer.md}"
+                                       },
+                  "OpenFrontendSpecialist":  {
+                                                 "description":  "Handles frontend UI, styling, and design implementation",
+                                                 "mode":  "subagent",
+                                                 "hidden":  true,
+                                                 "temperature":  0.1,
+                                                 "prompt":  "{file:./agents/subagents/development/frontend-specialist.md}"
+                                             },
+                  "CommandCreator":  {
+                                         "description":  "Creates custom OpenCode commands and templates",
+                                         "mode":  "subagent",
+                                         "hidden":  true,
+                                         "temperature":  0.1,
+                                         "prompt":  "{file:./agents/subagents/system-builder/command-creator.md}"
+                                     },
+                  "BuildAgent":  {
+                                     "description":  "Performs build and validation checks for code changes",
+                                     "mode":  "subagent",
+                                     "hidden":  true,
+                                     "temperature":  0.1,
+                                     "prompt":  "{file:./agents/subagents/code/build-agent.md}"
+                                 },
+                  "Image Specialist":  {
+                                           "description":  "Edits, analyzes, and generates images",
+                                           "mode":  "subagent",
+                                           "hidden":  true,
+                                           "temperature":  0.1,
+                                           "prompt":  "{file:./agents/subagents/utils/image-specialist.md}"
+                                       },
+                   "OpenRepoManager":  {
+                                           "description":  "Manages repository-level workflows and orchestration",
+                                           "mode":  "primary",
+                                           "temperature":  0.2,
+                                           "tools":  {
+                                                         "question":  true
+                                                     },
+                                           "permission":  {
+                                                              "question":  "allow"
+                                                          },
+                                           "prompt":  "{file:./agents/meta/repo-manager.md}"
+                                       },
+                  "DomainAnalyzer":  {
+                                         "description":  "Analyzes domains and extracts architectural concepts",
+                                         "mode":  "subagent",
+                                         "hidden":  true,
+                                         "temperature":  0.1,
+                                         "prompt":  "{file:./agents/subagents/system-builder/domain-analyzer.md}"
+                                     }
+              },
+    "command":  {
+                    "optimize":  {
+                                     "template":  "@commands/optimize.md"
+                                 },
+                     "check-context-deps":  {
+                                                "template":  "@commands/openagents/check-context-deps.md"
+                                            },
+                     "interactive-health":  {
+                                               "template":  "@commands/openagents/interactive-health.md"
+                                           },
+                     "compact-health":  {
+                                           "template":  "@commands/openagents/compact-health.md"
+                                       },
+                     "compact-readiness":  {
+                                               "template":  "@commands/openagents/compact-readiness.md"
+                                           },
+                     "test":  {
+                                  "template":  "@commands/test.md"
+                              },
+                    "build-context-system":  {
+                                                 "template":  "@commands/build-context-system.md"
+                                             },
+                    "validate-repo":  {
+                                          "template":  "@commands/validate-repo.md"
+                                      },
+                    "prompt-enhancer":  {
+                                            "template":  "@commands/prompt-engineering/prompt-enhancer.md"
+                                        },
+                    "worktrees":  {
+                                      "template":  "@commands/worktrees.md"
+                                  },
+                    "commit":  {
+                                   "template":  "@commands/commit.md"
+                               },
+                    "add-context":  {
+                                        "template":  "@commands/add-context.md"
+                                    },
+                    "analyze-patterns":  {
+                                             "template":  "@commands/analyze-patterns.md"
+                                         },
+                    "context":  {
+                                    "template":  "@commands/context.md"
+                                },
+                    "clean":  {
+                                  "template":  "@commands/clean.md"
+                              }
+                },
+    "skills":  {
+                   "paths":  [
+                                 "skills"
+                             ]
+               },
+    "plugin":  [
+                   "plugins"
+               ]
+}
