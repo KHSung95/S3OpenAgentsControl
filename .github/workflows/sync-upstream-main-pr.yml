@@ -1,0 +1,98 @@
+name: Sync Upstream Main PR
+
+on:
+  schedule:
+    - cron: "13 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync-upstream-main:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout fork main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch upstream and origin refs
+        run: |
+          if git remote | grep -q '^upstream$'; then
+            git remote set-url upstream "https://github.com/darrenhinde/OpenAgentsControl.git"
+          else
+            git remote add upstream "https://github.com/darrenhinde/OpenAgentsControl.git"
+          fi
+
+          git fetch upstream main
+          git fetch origin main
+
+      - name: Plan sync
+        id: plan
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          MAIN_SHA="$(git rev-parse origin/main)"
+          UPSTREAM_SHA="$(git rev-parse upstream/main)"
+
+          echo "main_sha=$MAIN_SHA" >> "$GITHUB_OUTPUT"
+          echo "upstream_sha=$UPSTREAM_SHA" >> "$GITHUB_OUTPUT"
+
+          if [ "$MAIN_SHA" = "$UPSTREAM_SHA" ]; then
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+            echo "reason=already-aligned" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          EXISTING_PR="$(gh pr list --state open --base main --json number,title --jq 'map(select(.title | startswith("chore: sync upstream main")))[0].number // empty')"
+          if [ -n "$EXISTING_PR" ]; then
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+            echo "reason=open-pr" >> "$GITHUB_OUTPUT"
+            echo "existing_pr=$EXISTING_PR" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "needed=true" >> "$GITHUB_OUTPUT"
+          echo "reason=create-pr" >> "$GITHUB_OUTPUT"
+
+      - name: Report no-op
+        if: steps.plan.outputs.needed != 'true'
+        run: |
+          echo "No sync PR created. reason=${{ steps.plan.outputs.reason }}"
+          if [ -n "${{ steps.plan.outputs.existing_pr }}" ]; then
+            echo "Existing PR: #${{ steps.plan.outputs.existing_pr }}"
+          fi
+
+      - name: Create sync branch
+        if: steps.plan.outputs.needed == 'true'
+        id: branch
+        run: |
+          BRANCH_NAME="bot/upstream-sync-$(date -u +%Y%m%d-%H%M%S)"
+          git checkout -B "$BRANCH_NAME" upstream/main
+          git push -u origin "$BRANCH_NAME"
+          echo "name=$BRANCH_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Open pull request to main
+        if: steps.plan.outputs.needed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --base main \
+            --head "${{ steps.branch.outputs.name }}" \
+            --title "chore: sync upstream main ($(date -u +%Y-%m-%d))" \
+            --body "$(cat <<'EOF'
+## Summary
+- Sync latest commits from `darrenhinde/OpenAgentsControl` into fork `main`
+- Keep fork `main` aligned so desktop overlay updates remain low-risk
+EOF
+)"
