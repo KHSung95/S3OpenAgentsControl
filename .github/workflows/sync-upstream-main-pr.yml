@@ -86,13 +86,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          cat > pr-body.md <<'EOF'
+          ## Summary
+          - Sync latest commits from `darrenhinde/OpenAgentsControl` into fork `main`
+          - Keep fork `main` aligned so desktop overlay updates remain low-risk
+          EOF
+
           gh pr create \
             --base main \
             --head "${{ steps.branch.outputs.name }}" \
             --title "chore: sync upstream main ($(date -u +%Y-%m-%d))" \
-            --body "$(cat <<'EOF'
-            ## Summary
-            - Sync latest commits from `darrenhinde/OpenAgentsControl` into fork `main`
-            - Keep fork `main` aligned so desktop overlay updates remain low-risk
-            EOF
-            )"
+            --body-file pr-body.md
