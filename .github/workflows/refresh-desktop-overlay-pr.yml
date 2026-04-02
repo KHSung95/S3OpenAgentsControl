@@ -1,0 +1,152 @@
+name: Refresh Desktop Overlay PR
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "43 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh-desktop-overlay:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch origin refs
+        run: |
+          git fetch origin main
+          git fetch origin desktop/main || true
+
+      - name: Ensure desktop/main exists
+        id: desktop_branch
+        run: |
+          if git ls-remote --exit-code --heads origin desktop/main >/dev/null 2>&1; then
+            echo "created=false" >> "$GITHUB_OUTPUT"
+          else
+            git checkout -B desktop/main origin/main
+            git push -u origin desktop/main
+            echo "created=true" >> "$GITHUB_OUTPUT"
+          fi
+
+          git fetch origin desktop/main
+
+      - name: Plan refresh
+        id: plan
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          EXISTING_PR="$(gh pr list --state open --base desktop/main --json number,title --jq 'map(select(.title | startswith("chore: refresh desktop overlay")))[0].number // empty')"
+          if [ -n "$EXISTING_PR" ]; then
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+            echo "reason=open-pr" >> "$GITHUB_OUTPUT"
+            echo "existing_pr=$EXISTING_PR" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "needed=true" >> "$GITHUB_OUTPUT"
+          echo "reason=create-pr" >> "$GITHUB_OUTPUT"
+
+      - name: Report no-op
+        if: steps.plan.outputs.needed != 'true'
+        run: |
+          echo "No refresh PR created. reason=${{ steps.plan.outputs.reason }}"
+          if [ -n "${{ steps.plan.outputs.existing_pr }}" ]; then
+            echo "Existing PR: #${{ steps.plan.outputs.existing_pr }}"
+          fi
+
+      - name: Build refresh branch
+        if: steps.plan.outputs.needed == 'true'
+        id: refresh
+        run: |
+          BRANCH_NAME="bot/desktop-overlay-refresh-$(date -u +%Y%m%d-%H%M%S)"
+          BASE_SHA="$(git rev-parse origin/desktop/main)"
+
+          git checkout -B "$BRANCH_NAME" origin/desktop/main
+          git rebase origin/main
+
+          echo "branch=$BRANCH_NAME" >> "$GITHUB_OUTPUT"
+          echo "base_sha=$BASE_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Apply desktop overlay
+        if: steps.plan.outputs.needed == 'true'
+        run: |
+          pwsh -File tools/fork-rebase/apply-overlay.ps1 \
+            -TargetRepo "$GITHUB_WORKSPACE" \
+            -SourceRoot "$GITHUB_WORKSPACE/overlay/desktop" \
+            -FailOnMissing
+
+      - name: Verify desktop overlay
+        if: steps.plan.outputs.needed == 'true'
+        run: |
+          pwsh -File tools/fork-rebase/verify-overlay.ps1 \
+            -TargetRepo "$GITHUB_WORKSPACE" \
+            -SourceRoot "$GITHUB_WORKSPACE/overlay/desktop"
+
+      - name: Commit overlay changes when needed
+        if: steps.plan.outputs.needed == 'true'
+        id: commit
+        run: |
+          if git diff --quiet -- .opencode; then
+            echo "committed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git add .opencode
+          git commit -m "chore: reapply desktop overlay"
+          echo "committed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Decide whether PR is required
+        if: steps.plan.outputs.needed == 'true'
+        id: result
+        run: |
+          CURRENT_SHA="$(git rev-parse HEAD)"
+          BASE_SHA="${{ steps.refresh.outputs.base_sha }}"
+
+          if [ "$CURRENT_SHA" = "$BASE_SHA" ]; then
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "needed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Push refresh branch
+        if: steps.plan.outputs.needed == 'true' && steps.result.outputs.needed == 'true'
+        run: |
+          git push -u origin "${{ steps.refresh.outputs.branch }}"
+
+      - name: Open pull request to desktop/main
+        if: steps.plan.outputs.needed == 'true' && steps.result.outputs.needed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --base desktop/main \
+            --head "${{ steps.refresh.outputs.branch }}" \
+            --title "chore: refresh desktop overlay ($(date -u +%Y-%m-%d))" \
+            --body "$(cat <<'EOF'
+## Summary
+- Rebase desktop branch on latest `main`
+- Re-apply overlay from `overlay/desktop` into `.opencode`
+- Verify overlay hash alignment before opening PR
+EOF
+)"
+
+      - name: Report no changes after refresh
+        if: steps.plan.outputs.needed == 'true' && steps.result.outputs.needed != 'true'
+        run: |
+          echo "No desktop refresh PR required. desktop/main already up to date."
