@@ -139,12 +139,12 @@ jobs:
             --head "${{ steps.refresh.outputs.branch }}" \
             --title "chore: refresh desktop overlay ($(date -u +%Y-%m-%d))" \
             --body "$(cat <<'EOF'
-## Summary
-- Rebase desktop branch on latest `main`
-- Re-apply overlay from `overlay/desktop` into `.opencode`
-- Verify overlay hash alignment before opening PR
-EOF
-)"
+            ## Summary
+            - Rebase desktop branch on latest `main`
+            - Re-apply overlay from `overlay/desktop` into `.opencode`
+            - Verify overlay hash alignment before opening PR
+            EOF
+            )"
 
       - name: Report no changes after refresh
         if: steps.plan.outputs.needed == 'true' && steps.result.outputs.needed != 'true'

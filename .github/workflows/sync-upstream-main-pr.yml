@@ -91,8 +91,8 @@ jobs:
             --head "${{ steps.branch.outputs.name }}" \
             --title "chore: sync upstream main ($(date -u +%Y-%m-%d))" \
             --body "$(cat <<'EOF'
-## Summary
-- Sync latest commits from `darrenhinde/OpenAgentsControl` into fork `main`
-- Keep fork `main` aligned so desktop overlay updates remain low-risk
-EOF
-)"
+            ## Summary
+            - Sync latest commits from `darrenhinde/OpenAgentsControl` into fork `main`
+            - Keep fork `main` aligned so desktop overlay updates remain low-risk
+            EOF
+            )"
