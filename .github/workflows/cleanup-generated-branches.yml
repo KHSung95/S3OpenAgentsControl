@@ -1,0 +1,69 @@
+name: Cleanup Generated Branches
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  cleanup-generated-branches:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch remote refs
+        run: |
+          git fetch origin --prune
+
+      - name: Delete stale generated branches
+        id: cleanup
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          OPEN_HEADS_FILE="$(mktemp)"
+          gh pr list --state open --json headRefName --jq '.[].headRefName' > "$OPEN_HEADS_FILE"
+
+          deleted=0
+          skipped_open=0
+
+          while IFS= read -r branch; do
+            case "$branch" in
+              main|desktop/main)
+                continue
+                ;;
+              bot/upstream-sync-main|bot/desktop-overlay-refresh|bot/upstream-sync-*|bot/desktop-overlay-refresh-*|chore/version-bump-*)
+                if grep -Fxq "$branch" "$OPEN_HEADS_FILE"; then
+                  echo "SKIP open PR head: $branch"
+                  skipped_open=$((skipped_open + 1))
+                  continue
+                fi
+
+                echo "DELETE $branch"
+                git push origin --delete "$branch"
+                deleted=$((deleted + 1))
+                ;;
+            esac
+          done < <(git for-each-ref --format='%(refname:strip=3)' refs/remotes/origin)
+
+          rm -f "$OPEN_HEADS_FILE"
+
+          echo "deleted=$deleted" >> "$GITHUB_OUTPUT"
+          echo "skipped_open=$skipped_open" >> "$GITHUB_OUTPUT"
+
+      - name: Report cleanup summary
+        run: |
+          echo "Deleted branches: ${{ steps.cleanup.outputs.deleted }}"
+          echo "Skipped open PR branches: ${{ steps.cleanup.outputs.skipped_open }}"

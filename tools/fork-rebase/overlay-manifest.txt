@@ -1,0 +1,42 @@
+# Format:
+# - `<path>`: source and target are the same relative path
+# - `<source> => <target>`: source path maps to different target path
+#
+# Source root: this workspace root (C:\Users\bug95\.config\opencode)
+# Target root: <target-repo>/.opencode/
+
+opencode.json
+config/agent-metadata.json
+
+agents/core/openagent.md => agent/core/openagent.md
+agents/core/opencoder.md => agent/core/opencoder.md
+agents/meta/repo-manager.md => agent/meta/repo-manager.md
+agents/meta/system-builder.md => agent/meta/system-builder.md
+
+agents/subagents/core/task-manager.md => agent/subagents/core/task-manager.md
+agents/subagents/core/batch-executor.md => agent/subagents/core/batch-executor.md
+agents/subagents/core/contract-compactor.md => agent/subagents/core/contract-compactor.md
+agents/subagents/core/documentation.md => agent/subagents/core/documentation.md
+
+agents/subagents/code/coder-agent.md => agent/subagents/code/coder-agent.md
+agents/subagents/code/test-engineer.md => agent/subagents/code/test-engineer.md
+agents/subagents/code/reviewer.md => agent/subagents/code/reviewer.md
+agents/subagents/code/build-agent.md => agent/subagents/code/build-agent.md
+
+agents/subagents/development/frontend-specialist.md => agent/subagents/development/frontend-specialist.md
+agents/subagents/development/devops-specialist.md => agent/subagents/development/devops-specialist.md
+
+commands/build-context-system.md => command/build-context-system.md
+commands/context.md => command/context.md
+commands/openagents/interactive-health.md => command/openagents/interactive-health.md
+commands/openagents/compact-health.md => command/openagents/compact-health.md
+commands/openagents/compact-readiness.md => command/openagents/compact-readiness.md
+
+context/core/workflows/compact-protocol.md
+context/core/workflows/compact-contract-schema.md
+context/core/workflows/navigation.md
+context/core/context-system/guides/compact.md
+
+skills/protocol-guard/SKILL.md
+skills/protocol-guard/router.sh
+skills/protocol-guard/scripts/protocol-cli.ts
